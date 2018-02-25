@@ -4,6 +4,17 @@ library(shiny)
 library(xtable)
 library(DT)
 library(dplyr)
+
+updateRadio <-
+  function (session,
+            inputId,
+            label = NULL,
+            value = NULL)
+  {
+    message <- list(label = label, value = value)
+    session$sendInputMessage(inputId, message)
+  }
+
 mmUI <- function() {
   generateRadioButton <- function(id, label) {
     htmlRed <- "<p style='color:red;'>Red</p>"
@@ -54,7 +65,9 @@ mmUI <- function() {
           column(1, style = "background-color:aqua;", htmlOutput('txtcell3')),
           column(1, style = "background-color:aqua;", htmlOutput('txtcell4'))
         ),
-        fixedRow(column(6, style = "background-color:pink;", dataTableOutput('board'))),
+        fixedRow(
+          column(6, style = "background-color:pink;", dataTableOutput('board'))
+        ),
         fixedRow(column(
           3, style = "background-color:aqua;", actionButton("showResults", "Show Results")
         ))
@@ -64,7 +77,10 @@ mmUI <- function() {
 }
 server <- function(input, output, session) {
   code = c(1, 2, 3, 4)
-  localBoard <- matrix('', ncol = 8, nrow = 10, byrow = TRUE)
+  localBoard <- matrix('',
+                       ncol = 8,
+                       nrow = 10,
+                       byrow = TRUE)
   currentRowIndex <- 1
   # Update current row
   output$txtcell1 <- renderText({
@@ -86,7 +102,7 @@ server <- function(input, output, session) {
   #' @examples
   #'
   observeEvent(input$showResults, {
-    localBoard[currentRowIndex, ] <<-
+    localBoard[currentRowIndex,] <<-
       c(input$cell1,
         input$cell2,
         input$cell3,
@@ -97,21 +113,33 @@ server <- function(input, output, session) {
         0)
     printLocalBoard()
     outputBoard()
+    currentRowIndex <<- currentRowIndex + 1
+    updateRadio(session, 'cell1', label = 'Cell 1', value = 'black')
+    updateRadio(session, 'cell2', label = 'Cell 2', value = 'black')
+    updateRadio(session, 'cell3', label = 'Cell 3', value = 'black')
+    updateRadio(session, 'cell4', label = 'Cell 4', value = 'black')
   })
-  printLocalBoard <- function(){
-    print(localBoard[currentRowIndex,])
+  printLocalBoard <- function() {
+    print(localBoard[currentRowIndex, ])
   }
   outputBoard <- function() {
-
-    values = matrix(c('0','0','0','0','p','p','p','p'), ncol = 8, nrow = 10, byrow = TRUE )
+    values = matrix(
+      c('0', '0', '0', '0', 'p', 'p', 'p', 'p'),
+      ncol = 8,
+      nrow = 10,
+      byrow = TRUE
+    )
 
     xxx <- renderDataTable({
-      dat <- datatable(localBoard, options = list(paging=FALSE, searching=FALSE)) %>%
+      dat <-
+        datatable(localBoard, options = list(paging = FALSE, searching = FALSE)) %>%
         formatStyle(
           columns = 1:4,
           valueColumns = 1:4,
-          color = styleEqual(levels=c('black', 'blue', 'green', 'orange', 'red', 'white'),
-                                      values=c('black', 'blue', 'green', 'orange', 'red', 'white'))
+          color = styleEqual(
+            levels = c('black', 'blue', 'green', 'orange', 'red', 'white'),
+            values = c('black', 'blue', 'green', 'orange', 'red', 'white')
+          )
         )
       return(dat)
     })
