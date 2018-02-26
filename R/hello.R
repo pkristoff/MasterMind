@@ -76,7 +76,8 @@ mmUI <- function() {
   )
 }
 server <- function(input, output, session) {
-  code = c(1, 2, 3, 4)
+  code = sample(c('black', 'blue', 'green', 'orange', 'red', 'white'), 4)
+  print(code)
   localBoard <- matrix('',
                        ncol = 8,
                        nrow = 10,
@@ -102,15 +103,54 @@ server <- function(input, output, session) {
   #' @examples
   #'
   observeEvent(input$showResults, {
-    localBoard[currentRowIndex,] <<-
-      c(input$cell1,
-        input$cell2,
-        input$cell3,
-        input$cell4,
-        0,
-        0,
-        0,
-        0)
+    nextPos <- 5
+    result <- c(input$cell1,
+                input$cell2,
+                input$cell3,
+                input$cell4,
+                0,
+                0,
+                0,
+                0)
+    guess <- c(input$cell1,
+               input$cell2,
+               input$cell3,
+               input$cell4)
+    # print(paste('code:', code))
+    # print(paste('guess:', guess))
+    posFound <- c()
+    posNotFound <- c()
+    for (pos in 1:4) {
+      if (guess[pos] == code[pos]) {
+        posFound <- append(posFound, pos)
+        result[nextPos] <- 'black'
+        nextPos <- nextPos + 1
+      } else {
+        posNotFound <- append(posNotFound, pos)
+      }
+    }
+    # print(paste('posFound:', posFound))
+    # print(paste('posNotFound:', posNotFound))
+    for (posNF in posNotFound) {
+      color = guess[posNF]
+      # print(paste('looking for color:',color))
+      for (pos2 in 1:4) {
+        if (match(pos2, posFound, nomatch = 0) == 0) {
+          # print(paste('code:',code))
+          # print(paste('pos2:',pos2,'code[pos2]:',code[pos2]))
+          # print(paste('pos2:', pos2, 'code[pos2]:', code[pos2], 'color:', color))
+          if (color == code[pos2]) {
+            # print(paste('found color:',color))
+            posFound <- append(posFound, pos2)
+            result[nextPos] <- 'white'
+            nextPos <- nextPos + 1
+          } else{
+            # print(paste('code[pos2]:',code[pos2]))
+          }
+        }
+      }
+    }
+    localBoard[currentRowIndex,] <<- result
     printLocalBoard()
     outputBoard()
     currentRowIndex <<- currentRowIndex + 1
@@ -129,10 +169,28 @@ server <- function(input, output, session) {
       nrow = 10,
       byrow = TRUE
     )
+    columnNames <- c('1', '2', '3', '4', '1', '2', '3', '4')
 
     xxx <- renderDataTable({
       dat <-
-        datatable(localBoard, options = list(paging = FALSE, searching = FALSE)) %>%
+        datatable(
+          localBoard,
+          colnames = columnNames,
+          container = withTags(table(class = 'display',
+                                     thead(
+                                       tr(
+                                         th(colspan = 4, style = "text-align:center", 'Guess'),
+                                         th(colspan = 4, style = "text-align:center", 'Result')
+                                       ),
+                                       tr(lapply(paste(columnNames), th))
+                                     ))),
+          options = list(
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            dom = 't'
+          )
+        ) %>%
         formatStyle(
           columns = 1:4,
           valueColumns = 1:4,
