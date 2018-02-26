@@ -25,7 +25,7 @@ mmUI <- function() {
     htmlWhite <- "<p style='color:white;'>White</p>"
 
     column(
-      4,
+      3,
       radioButtons(
         id,
         label,
@@ -45,15 +45,16 @@ mmUI <- function() {
   pageWithSidebar(
     headerPanel("Master Mind"),
 
-    sidebarPanel(
-      shinyjs::useShinyjs(),
-      fluidRow(
-        generateRadioButton("cell1", "Cell 1"),
-        generateRadioButton("cell2", "Cell 2"),
-        generateRadioButton("cell3", "Cell 3"),
-        generateRadioButton("cell4", "Cell 4")
-      )
-    ),
+    sidebarPanel(shinyjs::useShinyjs(),
+                 column(
+                   12,
+                   fluidRow(
+                     generateRadioButton("cell1", "Cell 1"),
+                     generateRadioButton("cell2", "Cell 2"),
+                     generateRadioButton("cell3", "Cell 3"),
+                     generateRadioButton("cell4", "Cell 4")
+                   )
+                 )),
 
     mainPanel(fixedRow(
       column(
@@ -66,7 +67,8 @@ mmUI <- function() {
           column(1, style = "background-color:aqua;", htmlOutput('txtcell4'))
         ),
         fixedRow(
-          column(6, style = "background-color:pink;", dataTableOutput('board'))
+          column(6, style = "background-color:pink;", dataTableOutput('boardGuess')),
+          column(6, style = "background-color:pink;", dataTableOutput('boardResult'))
         ),
         fixedRow(column(
           3, style = "background-color:aqua;", actionButton("showResults", "Show Results")
@@ -78,10 +80,14 @@ mmUI <- function() {
 server <- function(input, output, session) {
   code = sample(c('black', 'blue', 'green', 'orange', 'red', 'white'), 4)
   print(code)
-  localBoard <- matrix('',
-                       ncol = 8,
-                       nrow = 10,
-                       byrow = TRUE)
+  localBoardGuess <- matrix('',
+                            ncol = 4,
+                            nrow = 10,
+                            byrow = TRUE)
+  localBoardResult <- matrix('',
+                             ncol = 4,
+                             nrow = 10,
+                             byrow = TRUE)
   currentRowIndex <- 1
   # Update current row
   output$txtcell1 <- renderText({
@@ -103,15 +109,11 @@ server <- function(input, output, session) {
   #' @examples
   #'
   observeEvent(input$showResults, {
-    nextPos <- 5
-    result <- c(input$cell1,
-                input$cell2,
-                input$cell3,
-                input$cell4,
-                0,
-                0,
-                0,
-                0)
+    nextPos <- 1
+    result <- c('',
+                '',
+                '',
+                '')
     guess <- c(input$cell1,
                input$cell2,
                input$cell3,
@@ -150,8 +152,9 @@ server <- function(input, output, session) {
         }
       }
     }
-    localBoard[currentRowIndex,] <<- result
-    printLocalBoard()
+    localBoardGuess[currentRowIndex, ] <<- guess
+    localBoardResult[currentRowIndex, ] <<- result
+    # printlocalBoardGuess()
     outputBoard()
     currentRowIndex <<- currentRowIndex + 1
     updateRadio(session, 'cell1', label = 'Cell 1', value = 'black')
@@ -159,8 +162,8 @@ server <- function(input, output, session) {
     updateRadio(session, 'cell3', label = 'Cell 3', value = 'black')
     updateRadio(session, 'cell4', label = 'Cell 4', value = 'black')
   })
-  printLocalBoard <- function() {
-    print(localBoard[currentRowIndex, ])
+  printlocalBoardGuess <- function() {
+    print(localBoardGuess[currentRowIndex,])
   }
   outputBoard <- function() {
     values = matrix(
@@ -169,19 +172,18 @@ server <- function(input, output, session) {
       nrow = 10,
       byrow = TRUE
     )
-    columnNames <- c('1', '2', '3', '4', '1', '2', '3', '4')
+    columnNames <- c('1', '2', '3', '4')
 
-    xxx <- renderDataTable({
+    datatableGuess <- renderDataTable({
       dat <-
         datatable(
-          localBoard,
+          localBoardGuess,
           colnames = columnNames,
           container = withTags(table(class = 'display',
                                      thead(
-                                       tr(
-                                         th(colspan = 4, style = "text-align:center", 'Guess'),
-                                         th(colspan = 4, style = "text-align:center", 'Result')
-                                       ),
+                                       tr(th(
+                                         colspan = 4, style = "text-align:center", 'Guess'
+                                       )),
                                        tr(lapply(paste(columnNames), th))
                                      ))),
           options = list(
@@ -201,8 +203,39 @@ server <- function(input, output, session) {
         )
       return(dat)
     })
-    # print(xxx)
-    output$board <- xxx
+    output$boardGuess <- datatableGuess
+
+    datatableResult <- renderDataTable({
+      dat <-
+        datatable(
+          localBoardResult,
+          colnames = columnNames,
+          container = withTags(table(class = 'display',
+                                     thead(
+                                       tr(th(
+                                         colspan = 4, style = "text-align:center", 'Result'
+                                       )),
+                                       tr(lapply(paste(columnNames), th))
+                                     ))),
+          options = list(
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            dom = 't'
+          )
+        ) %>%
+        formatStyle(
+          columns = 1:4,
+          valueColumns = 1:4,
+          color = styleEqual(
+            levels = c('black', 'blue', 'green', 'orange', 'red', 'white'),
+            values = c('black', 'blue', 'green', 'orange', 'red', 'white')
+          )
+        )
+      return(dat)
+    })
+    # print(datatableGuess)
+    output$boardResult <- datatableResult
   }
 }
 

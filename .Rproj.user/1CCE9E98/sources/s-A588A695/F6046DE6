@@ -5,16 +5,16 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2802144378",
+    "hash" : "1056358483",
     "id" : "F6046DE6",
-    "lastKnownWriteTime" : 1519590143,
-    "last_content_update" : 1519590143157,
+    "lastKnownWriteTime" : 1519645699,
+    "last_content_update" : 1519645699324,
     "path" : "~/dev/Mastermind/R/hello.R",
     "project_path" : "R/hello.R",
     "properties" : {
-        "cursorPosition" : "108,38",
+        "cursorPosition" : "115,17",
         "docOutlineVisible" : "1",
-        "scrollLine" : "95"
+        "scrollLine" : "102"
     },
     "relative_order" : 1,
     "source_on_save" : false,
