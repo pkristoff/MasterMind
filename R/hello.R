@@ -75,7 +75,7 @@ mmUI <- function() {
         column(2, actionButton("startGame", "Start Game"))
       )))
   ),
-  conditionalPanel(condition = "input.state == 'game'",
+  conditionalPanel(condition = "output.state == 'game'",
     'Game', fluid = TRUE,
     sidebarLayout(
       sidebarPanel(
@@ -128,26 +128,54 @@ mmUI <- function() {
   htmlOutput('state')
   )
 }
-updateResults <- function (input, code) {
-  nextPos <- 6
-  result <- c(input$cell1,
-              input$cell2,
-              input$cell3,
-              input$cell4,
-              '',
-              '',
-              '',
-              '',
-              '')
+updateResults <- function (input, code, numOfPicks) {
+  nextPos <- numOfPicks+2
+
+  if (numOfPicks == 1){
+    result <- c(input$cell1,
+                '',
+                '')
+    guess <- c(input$cell1)
+  }else if (numOfPicks == 2){
+    result <- c(input$cell1,
+                input$cell2,
+                '',
+                '',
+                '')
+    guess <- c(input$cell1,
+               input$cell2)
+  }else if (numOfPicks == 3){
+    result <- c(input$cell1,
+                input$cell2,
+                input$cell3,
+                '',
+                '',
+                '',
+                '')
+    guess <- c(input$cell1,
+               input$cell2,
+               input$cell3)
+  }else{
+    result <- c(input$cell1,
+                    input$cell2,
+                    input$cell3,
+                    input$cell4,
+                    '',
+                    '',
+                    '',
+                    '',
+                    '')
   guess <- c(input$cell1,
              input$cell2,
              input$cell3,
              input$cell4)
+  }
+
   # print(paste('code:', code))
   # print(paste('guess:', guess))
   posFound <- c()
   posNotFound <- c()
-  for (pos in 1:4) {
+  for (pos in 1:numOfPicks) {
     if (guess[pos] == code[pos]) {
       posFound <- append(posFound, pos)
       result[nextPos] <- 'black'
@@ -161,7 +189,7 @@ updateResults <- function (input, code) {
   for (posNF in posNotFound) {
     color = guess[posNF]
     # print(paste('looking for color:',color))
-    for (pos2 in 1:4) {
+    for (pos2 in 1:numOfPicks) {
       if (match(pos2, posFound, nomatch = 0) == 0) {
         # print(paste('code:',code))
         # print(paste('pos2:',pos2,'code[pos2]:',code[pos2]))
@@ -177,17 +205,18 @@ updateResults <- function (input, code) {
       }
     }
   }
+  print(result)
   result
 }
 server <- function(input, output, session) {
+  numOfColors <- 0
+  numOfPicks <- 0
   output$state <- reactive({'preGame'})
   # values <- reactiveValues(state = 'preGame')
-  code = sample(c('black', 'blue', 'green', 'orange', 'red', 'white'), 4)
-  print(code)
-  localBoard <- matrix('',
-                       ncol = 9,
-                       nrow = 10,
-                       byrow = TRUE)
+  availableColors <- c('black', 'blue', 'green', 'orange', 'red', 'white')
+  code <- NULL
+  localBoard <- NULL
+  print(paste("localBoard.ncol.new=", ncol(localBoard)))
   currentRowIndex <- 1
   # Update current row
   output$txtcell1 <- renderText({
@@ -208,8 +237,35 @@ server <- function(input, output, session) {
   #'
   #' @examples
   #'
+  observeEvent(input$startNewGame, {
+    output$state <- renderText('preGame')
+  })
+
+  #' called if Show Result button is called.
+  #'
+  #' @examples
+  #'
+  observeEvent(input$startGame, {
+    numOfPicks <<- as.numeric(input$numOfPicks)
+    numOfColors <<- as.numeric(input$numOfColors)
+    print(paste("numOfPicks", input$numOfPicks))
+    print(paste("numOfColors", input$numOfColors))
+    localBoard <<- matrix('',
+                         ncol = numOfPicks*2+1,
+                         nrow = 10,
+                         byrow = TRUE)
+    code <<- sample(availableColors[1:numOfColors], numOfPicks)
+    print(paste("code=", code))
+    output$state <- renderText('game')
+  })
+
+  #' called if Show Result button is called.
+  #'
+  #' @examples
+  #'
   observeEvent(input$showResults, {
-    localBoard[currentRowIndex, ] <<- updateResults(input, code)
+    print(paste("localBoard.ncol=", ncol(localBoard)))
+    localBoard[currentRowIndex, ] <<- updateResults(input, code, numOfPicks)
     printLocalBoard()
     outputBoard()
     currentRowIndex <<- currentRowIndex + 1
@@ -240,13 +296,25 @@ server <- function(input, output, session) {
     # print(localBoard[currentRowIndex, ])
   }
   outputBoard <- function() {
+    if (numOfPicks == 1){
+      val <- c('0', 'p')
+      columnNames <- c('1', '')
+    }else if (numOfPicks == 2){
+      val <- c('0', '0', 'p', 'p')
+      columnNames <- c('1', '2', '', '', '')
+    }else if (numOfPicks == 3){
+      val <- c('0','0','0', 'p', 'p', 'p')
+      columnNames <- c('1', '2', '3', '', '', '', '')
+    }else{
+      val <- c('0', '0', '0', '0', 'p', 'p', 'p', 'p')
+      columnNames <- c('1', '2', '3', '4', '', '', '', '', '')
+    }
     values = matrix(
-      c('0', '0', '0', '0', 'p', 'p', 'p', 'p'),
-      ncol = 8,
+      val,
+      ncol = numOfPicks*2,
       nrow = 10,
       byrow = TRUE
     )
-    columnNames <- c('1', '2', '3', '4', '', '', '', '', '')
 
     xxx <- renderDataTable({
       dat <-
@@ -256,9 +324,9 @@ server <- function(input, output, session) {
           container = withTags(table(class = 'display',
                                      thead(
                                        tr(
-                                         th(colspan = 4, style = "text-align:center", 'Guess'),
+                                         th(colspan = numOfPicks, style = "text-align:center", 'Guess'),
                                          th(colspan = 1, style = "text-align:center", ''),
-                                         th(colspan = 4, style = "text-align:center", 'Result')
+                                         th(colspan = numOfPicks, style = "text-align:center", 'Result')
                                        ),
                                        tr(lapply(paste(columnNames), th))
                                      ))),
@@ -270,8 +338,8 @@ server <- function(input, output, session) {
           )
         ) %>%
         formatStyle(
-          columns = 1:4,
-          valueColumns = 1:4,
+          columns = 1:numOfPicks,
+          valueColumns = 1:numOfPicks,
           color = styleEqual(
             levels = c('black', 'blue', 'green', 'orange', 'red', 'white'),
             values = c('black', 'blue', 'green', 'orange', 'red', 'white')
