@@ -20,7 +20,8 @@ mmUI <- function() {
     htmlRed <- "<p style='color:red;font-size:10px;'>Red</p>"
     htmlGreen <- "<p style='color:green;font-size:10px;'>Green</p>"
     htmlBlue <- "<p style='color:blue;font-size:10px;'>Blue</p>"
-    htmlOrange <- "<p style='color:orange;font-size:10px;'>Orange</p>"
+    htmlOrange <-
+      "<p style='color:orange;font-size:10px;'>Orange</p>"
     htmlBlack <- "<p style='color:black;font-size:10px;'>Black</p>"
     htmlWhite <- "<p style='color:white;font-size:10px;'>White</p>"
 
@@ -42,38 +43,89 @@ mmUI <- function() {
       textOutput(paste("txt", id))
     )
   }
-  pageWithSidebar(
-    headerPanel("Master Mind"),
+  fluidPage(
 
-    sidebarPanel(
-      shinyjs::useShinyjs(),
-      fluidRow(style = "background-color:aqua;",
-        generateRadioButton("cell1", "Cell 1"),
-        generateRadioButton("cell2", "Cell 2"),
-        generateRadioButton("cell3", "Cell 3"),
-        generateRadioButton("cell4", "Cell 4")
-      )
-    ),
-
-    mainPanel(fixedRow(
+      conditionalPanel( condition = "output.state == 'preGame'",
+    'Pre Game', fluid = TRUE,
+    sidebarLayout(sidebarPanel(fluidRow(
+      # column(1, ),
       column(
-        12,
-        #style = "background-color:pink;",
-        fixedRow(
-          column(3, 'Current Guess'),
-          column(1, style = "background-color:aqua;", htmlOutput('txtcell1')),
-          column(1, style = "background-color:aqua;", htmlOutput('txtcell2')),
-          column(1, style = "background-color:aqua;", htmlOutput('txtcell3')),
-          column(1, style = "background-color:aqua;", htmlOutput('txtcell4'))
+        6,
+        radioButtons(
+          "numOfPicks",
+          "Number of Picks:",
+          choiceNames = list('1', '2', '3', '4'),
+          choiceValues = list('1', '2', '3', '4')
         ),
-        fixedRow(
-          column(12, style = "background-color:pink;", dataTableOutput('board'))
+        textOutput(paste("txtNumOfPicks"))
+      ),
+      column(
+        6,
+        radioButtons(
+          "numOfColors",
+          "Number of Colors",
+          choiceNames = list('1', '2', '3', '4', '5', '6'),
+          choiceValues = list('1', '2', '3', '4', '5', '6')
         ),
-        fixedRow(column(
-          2, actionButton("showResults", "Show Result")
-        ))
+        textOutput(paste("txtNumOfColors"))
       )
-    ))
+    )),
+    mainPanel(# buttons
+      fixedRow(
+        column(2, actionButton("startGame", "Start Game"))
+      )))
+  ),
+  conditionalPanel(condition = "input.state == 'game'",
+    'Game', fluid = TRUE,
+    sidebarLayout(
+      sidebarPanel(
+        shinyjs::useShinyjs(),
+        fluidRow(
+          style = "background-color:aqua;",
+          generateRadioButton("cell1", "Cell 1"),
+          generateRadioButton("cell2", "Cell 2"),
+          generateRadioButton("cell3", "Cell 3"),
+          generateRadioButton("cell4", "Cell 4")
+        )
+      ),
+
+      mainPanel(fixedRow(
+        column(
+          12,
+          fixedRow(
+            style = "background-color:pink;",
+            column(3, 'Code'),
+            column(1, style = "", htmlOutput('codecell1')),
+            column(1, style = "", htmlOutput('codecell2')),
+            column(1, style = "", htmlOutput('codecell3')),
+            column(1, style = "", htmlOutput('codecell4'))
+          ),
+          fixedRow(
+            style = "background-color:aqua;",
+            column(3, 'Current Guess'),
+            column(1, htmlOutput('txtcell1')),
+            column(1, htmlOutput('txtcell2')),
+            column(1, htmlOutput('txtcell3')),
+            column(1, htmlOutput('txtcell4'))
+          ),
+          fixedRow(
+            column(12, style = "background-color:pink;", dataTableOutput('board'))
+          ),
+          # buttons
+          fixedRow(column(
+            2, actionButton("showResults", "Show result")
+          )),
+          fixedRow(column(
+            2, actionButton("showCode", "Show code")
+          )),
+          fixedRow(column(
+            2, actionButton("startNewGame", "Start new game")
+          ))
+        )
+      ))
+  )
+  ),
+  htmlOutput('state')
   )
 }
 updateResults <- function (input, code) {
@@ -128,6 +180,8 @@ updateResults <- function (input, code) {
   result
 }
 server <- function(input, output, session) {
+  output$state <- reactive({'preGame'})
+  # values <- reactiveValues(state = 'preGame')
   code = sample(c('black', 'blue', 'green', 'orange', 'red', 'white'), 4)
   print(code)
   localBoard <- matrix('',
@@ -150,13 +204,12 @@ server <- function(input, output, session) {
   })
 
 
-  #' called if New Game button is called.
+  #' called if Show Result button is called.
   #'
   #' @examples
   #'
   observeEvent(input$showResults, {
-
-    localBoard[currentRowIndex,] <<- updateResults(input, code)
+    localBoard[currentRowIndex, ] <<- updateResults(input, code)
     printLocalBoard()
     outputBoard()
     currentRowIndex <<- currentRowIndex + 1
@@ -165,8 +218,26 @@ server <- function(input, output, session) {
     updateRadio(session, 'cell3', label = 'Cell 3', value = 'black')
     updateRadio(session, 'cell4', label = 'Cell 4', value = 'black')
   })
+  #' called if Show Code button is called.
+  #'
+  #' @examples
+  #'
+  observeEvent(input$showCode, {
+    output$codecell1 <- renderText({
+      paste("<p style='color:", code[1], ";'>O</p>")
+    })
+    output$codecell2 <- renderText({
+      paste("<p style='color:", code[2], ";'>O</p>")
+    })
+    output$codecell3 <- renderText({
+      paste("<p style='color:", code[3], ";'>O</p>")
+    })
+    output$codecell4 <- renderText({
+      paste("<p style='color:", code[4], ";'>O</p>")
+    })
+  })
   printLocalBoard <- function() {
-    print(localBoard[currentRowIndex, ])
+    # print(localBoard[currentRowIndex, ])
   }
   outputBoard <- function() {
     values = matrix(
@@ -175,7 +246,7 @@ server <- function(input, output, session) {
       nrow = 10,
       byrow = TRUE
     )
-    columnNames <- c('1', '2', '3', '4', '', '1', '2', '3', '4')
+    columnNames <- c('1', '2', '3', '4', '', '', '', '', '')
 
     xxx <- renderDataTable({
       dat <-
