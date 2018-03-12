@@ -1,4 +1,5 @@
 
+
 library(shiny)
 library(shinyjs)
 library(xtable)
@@ -9,8 +10,7 @@ updateRadio <-
   function (session,
             inputId,
             label = NULL,
-            value = NULL)
-  {
+            value = NULL) {
     message <- list(label = label, value = value)
     session$sendInputMessage(inputId, message)
   }
@@ -18,21 +18,29 @@ updateRadio <-
 setupRadio <-
   function (session,
             inputId,
-            gameColors)
-  {
+            gameColors, shouldEnable) {
     choiceNames <- list()
     choiceValues <- list()
     for (gameColor in gameColors) {
       # htmlColor <- paste0('<p style="color:',gameColor,';font-size:10px;">',gameColor,"</p>")
-      htmlColor <- gameColor
-      choiceNames <- append(htmlColor, choiceNames)
-      choiceValues <- append(gameColor, choiceValues)
+      # htmlColor <- gameColor
+      # choiceNames <- append(htmlColor, choiceNames)
+      # choiceValues <- append(gameColor, choiceValues)
     }
 
-    updateRadioButtons(session,
-                       inputId,
-                       choiceNames = choiceNames,
-                       choiceValues = gameColors)
+    if (shouldEnable){
+      enable(inputId)
+      updateRadioButtons(session,
+                         inputId,
+                         choices = gameColors)
+    } else{
+      disable(inputId)
+      updateRadioButtons(session,
+                         inputId,
+                         choices = c('do not pick'))
+    }
+    # choiceNames = choiceNames,
+    # choiceValues = gameColors)
   }
 
 # radio buttons for making guess
@@ -54,7 +62,6 @@ guesscell3 <- 'guesscell3'
 guesscell4 <- 'guesscell4'
 
 mmUI <- function() {
-  print('starting mmUI')
   generateRadioButton <- function(id, label) {
     htmlRed <- "<p style='color:red;font-size:10px;'>Red</p>"
     htmlGreen <- "<p style='color:green;font-size:10px;'>Green</p>"
@@ -93,12 +100,10 @@ mmUI <- function() {
         # column(1, ),
         column(
           6,
-          radioButtons(
-            "numOfPicks",
-            "Number of Picks:",
-            # inputId = 'numOfPicksii',
-            choices = list('1', '2', '3', '4')
-          ),
+          radioButtons("numOfPicks",
+                       "Number of Picks:",
+                       # inputId = 'numOfPicksii',
+                       choices = list('1', '2', '3', '4')),
           textOutput("txtNumOfPicks")
         ),
         column(
@@ -168,9 +173,9 @@ mmUI <- function() {
             fixedRow(column(
               2, actionButton("startNewGame", "Start new game")
             )),
-            fixedRow(column(
-              2, actionButton("quitGame", "Quit")
-            ))
+            fixedRow(column(2, actionButton(
+              "quitGame", "Quit"
+            )))
           )
         ))
       )
@@ -179,87 +184,128 @@ mmUI <- function() {
   )
   # print('ending mmUI')
 }
-updateResults <- function (input, code, numOfPicks) {
-  nextPos <- numOfPicks + 2
+updateResults <-
+  function (input,
+            code,
+            numOfPicks,
+            guess1,
+            guess2,
+            guess3,
+            guess4) {
+    resultPos <- numOfPicks + 2
+    guesses <- c(guess1,
+                 guess2,
+                 guess3,
+                 guess4)
+    result <- guesses[1:numOfPicks]
+    result <- append(result, '')
+    result <- c(result, c('')[1:numOfPicks])
 
-  if (numOfPicks == 1) {
-    result <- c(input$cell1,
-                '',
-                '')
-    guess <- c(input$cell1)
-  } else if (numOfPicks == 2) {
-    result <- c(input$cell1,
-                input$cell2,
-                '',
-                '',
-                '')
-    guess <- c(input$cell1,
-               input$cell2)
-  } else if (numOfPicks == 3) {
-    result <- c(input$cell1,
-                input$cell2,
-                input$cell3,
-                '',
-                '',
-                '',
-                '')
-    guess <- c(input$cell1,
-               input$cell2,
-               input$cell3)
-  } else{
-    result <- c(input$guesscell1,
-                input$guesscell2,
-                input$guesscell3,
-                input$guesscell4,
-                '',
-                '',
-                '',
-                '',
-                '')
-    guess <- c(input$guesscell1,
-               input$guesscell2,
-               input$guesscell3,
-               input$guesscell4)
-  }
+    myGuess <- guesses[1:numOfPicks]
 
-  # print(paste('code:', code))
-  # print(paste('guess:', guess))
-  posFound <- c()
-  posNotFound <- c()
-  for (pos in 1:numOfPicks) {
-    if (guess[pos] == code[pos]) {
-      posFound <- append(posFound, pos)
-      result[nextPos] <- 'black'
-      nextPos <- nextPos + 1
-    } else {
-      posNotFound <- append(posNotFound, pos)
+    # print(paste('code:', code))
+    # print(paste('myGuess:', myGuess))
+    posFound <- c()
+    posNotFound <- c()
+    for (pos in 1:numOfPicks) {
+      # print(paste('pos=', pos, 'nextPos', nextPos))
+      if (myGuess[pos] == code[pos]) {
+        posFound <- append(posFound, pos)
+        result[resultPos] <- 'black'
+        resultPos <- resultPos + 1
+      } else {
+        posNotFound <- append(posNotFound, pos)
+      }
     }
-  }
-  # print(paste('posFound:', posFound))
-  # print(paste('posNotFound:', posNotFound))
-  for (posNF in posNotFound) {
-    color = guess[posNF]
-    # print(paste('looking for color:',color))
-    for (pos2 in 1:numOfPicks) {
-      if (match(pos2, posFound, nomatch = 0) == 0) {
-        # print(paste('code:',code))
-        # print(paste('pos2:',pos2,'code[pos2]:',code[pos2]))
-        # print(paste('pos2:', pos2, 'code[pos2]:', code[pos2], 'color:', color))
-        if (color == code[pos2]) {
-          # print(paste('found color:',color))
-          posFound <- append(posFound, pos2)
-          result[nextPos] <- 'white'
-          nextPos <- nextPos + 1
-        } else{
-          # print(paste('code[pos2]:',code[pos2]))
+    # print(paste('posFound:', posFound))
+    # print(paste('posNotFound:', posNotFound))
+    for (posNF in posNotFound) {
+      color = myGuess[posNF]
+      # print(paste('looking for color:',color))
+      for (pos2 in 1:numOfPicks) {
+        if (match(pos2, posFound, nomatch = 0) == 0) {
+          # print(paste('code:',code))
+          # print(paste('pos2:',pos2,'code[pos2]:',code[pos2]))
+          # print(paste('pos2:', pos2, 'code[pos2]:', code[pos2], 'color:', color))
+          if (color == code[pos2]) {
+            # print(paste('found color:',color))
+            posFound <- append(posFound, pos2)
+            result[resultPos] <- 'white'
+            resultPos <- resultPos + 1
+          } else{
+            # print(paste('code[pos2]:',code[pos2]))
+          }
         }
       }
     }
+    result
   }
-  print(result)
-  result
-}
 server <- function(input, output, session) {
+  hideCode <- function() {
+    output$codecell1 <- renderText({
+      ''
+    })
+    output$codecell2 <- renderText({
+      ''
+    })
+    output$codecell3 <- renderText({
+      ''
+    })
+    output$codecell4 <- renderText({
+      ''
+    })
+  }
+  showCode <- function (numOfPicks) {
+    output$codecell1 <- renderText({
+      paste("<p style='color:", code[1], ";'>O</p>")
+    })
+    if (numOfPicks > 1) {
+      output$codecell2 <- renderText({
+        paste("<p style='color:", code[2], ";'>O</p>")
+      })
+    }
+    if (numOfPicks > 2) {
+      output$codecell3 <- renderText({
+        paste("<p style='color:", code[3], ";'>O</p>")
+      })
+    }
+    if (numOfPicks > 3) {
+      output$codecell4 <- renderText({
+        paste("<p style='color:", code[4], ";'>O</p>")
+      })
+    }
+  }
+  updateCurrentGuess <- function(numOfPicks) {
+    output$guesscell1 <- renderText({
+      # print(paste('numOfPicks',numOfPicks, 'input$radiocell1',input$radiocell1))
+      if (numOfPicks > 0) {
+        paste("<p style='color:", input$radiocell1, ";'>O</p>")
+      } else{
+        ''
+      }
+    })
+    output$guesscell2 <- renderText({
+      if (numOfPicks > 1) {
+        paste("<p style='color:", input$radiocell2, ";'>O</p>")
+      } else{
+        ''
+      }
+    })
+    output$guesscell3 <- renderText({
+      if (numOfPicks > 2) {
+        paste("<p style='color:", input$radiocell3, ";'>O</p>")
+      } else{
+        ''
+      }
+    })
+    output$guesscell4 <- renderText({
+      if (numOfPicks > 3) {
+        paste("<p style='color:", input$radiocell4, ";'>O</p>")
+      } else{
+        ''
+      }
+    })
+  }
   print('starting server')
   numOfColors <- 0
   numOfPicks <- 0
@@ -273,22 +319,10 @@ server <- function(input, output, session) {
   code <- NULL
   localBoard <- NULL
   currentRowIndex <- 1
-  # Update current row
-  output$guesscell1 <- renderText({
-    print(paste('input$radiocell1', input$radiocell1))
-    paste("<p style='color:", input$radiocell1, ";'>O</p>")
-  })
-  output$guesscell2 <- renderText({
-    paste("<p style='color:", input$radiocell2, ";'>O</p>")
-  })
-  output$guesscell3 <- renderText({
-    paste("<p style='color:", input$radiocell3, ";'>O</p>")
-  })
-  output$guesscell4 <- renderText({
-    paste("<p style='color:", input$radiocell4, ";'>O</p>")
-  })
 
+  # buttons
   observeEvent(input$startNewGame, {
+    hideCode()
     output$mindState <- renderText('preGame')
   })
 
@@ -306,30 +340,41 @@ server <- function(input, output, session) {
                           ncol = numOfPicks * 2 + 1,
                           nrow = 10,
                           byrow = TRUE)
+    currentRowIndex <- 1
+    outputBoard()
     gameColors <<- availableColors[1:numOfColors]
     print(paste("  gameColors", gameColors))
 
+    updateCurrentGuess(numOfPicks)
     # set radio buttons based on number of colors
-    setupRadio(session, radioId1, gameColors)
-    setupRadio(session, radioId2, gameColors)
-    setupRadio(session, radioId3, gameColors)
-    setupRadio(session, radioId4, gameColors)
+    setupRadio(session, radioId1, gameColors, numOfPicks > 0)
+    setupRadio(session, radioId2, gameColors, numOfPicks > 1)
+    setupRadio(session, radioId3, gameColors, numOfPicks > 2)
+    setupRadio(session, radioId4, gameColors, numOfPicks > 3)
 
     # enable/disable based on number of picks
-    if_else(numOfPicks >0, enable(radioId1), disable(radioId1))
-    if_else(numOfPicks >1, enable(radioId2), disable(radioId2))
-    if_else(numOfPicks >2, enable(radioId3), disable(radioId3))
-    if_else(numOfPicks >3, enable(radioId4), disable(radioId4))
+    # if_else(numOfPicks > 0, enable(radioId1), disable(radioId1))
+    # if_else(numOfPicks > 1, enable(radioId2), disable(radioId2))
+    # if_else(numOfPicks > 2, enable(radioId3), disable(radioId3))
+    # if_else(numOfPicks > 3, enable(radioId4), disable(radioId4))
 
-    code <<- sample(gameColors, numOfPicks, replace = FALSE)
+    code <<- sample(gameColors, numOfPicks, replace = length(gameColors) < numOfPicks)
     print(paste("  code=", code))
     output$mindState <- renderText('mindGame')
   })
 
   observeEvent(input$showResults, {
-    print(paste("localBoard.ncol=", ncol(localBoard)))
-    localBoard[currentRowIndex,] <<-
-      updateResults(input, code, numOfPicks)
+    # print(paste("localBoard.ncol=", ncol(localBoard)))
+    localBoard[currentRowIndex, ] <<-
+      updateResults(
+        input,
+        code,
+        numOfPicks,
+        input$radiocell1,
+        input$radiocell2,
+        input$radiocell3,
+        input$radiocell4
+      )
     printLocalBoard()
     outputBoard()
     currentRowIndex <<- currentRowIndex + 1
@@ -339,36 +384,30 @@ server <- function(input, output, session) {
     updateRadio(session, radioId4, label = 'Cell 4', value = 'black')
   })
   observeEvent(input$showCode, {
-    output$codecell1 <- renderText({
-      paste("<p style='color:", code[1], ";'>O</p>")
-    })
-    output$codecell2 <- renderText({
-      paste("<p style='color:", code[2], ";'>O</p>")
-    })
-    output$codecell3 <- renderText({
-      paste("<p style='color:", code[3], ";'>O</p>")
-    })
-    output$codecell4 <- renderText({
-      paste("<p style='color:", code[4], ";'>O</p>")
-    })
+    showCode(numOfPicks)
   })
   printLocalBoard <- function() {
     # print(localBoard[currentRowIndex, ])
   }
   outputBoard <- function() {
-    if (numOfPicks == 1) {
-      val <- c('0', 'p')
-      columnNames <- c('1', '')
-    } else if (numOfPicks == 2) {
-      val <- c('0', '0', 'p', 'p')
-      columnNames <- c('1', '2', '', '', '')
-    } else if (numOfPicks == 3) {
-      val <- c('0', '0', '0', 'p', 'p', 'p')
-      columnNames <- c('1', '2', '3', '', '', '', '')
-    } else{
-      val <- c('0', '0', '0', '0', 'p', 'p', 'p', 'p')
-      columnNames <- c('1', '2', '3', '4', '', '', '', '', '')
-    }
+    switch(numOfPicks,
+           {
+             val <- c('0', 'p')
+             columnNames <- c('1', '')
+           },
+           {
+             val <- c('0', '0', 'p', 'p')
+             columnNames <- c('1', '2', '', '', '')
+           },
+           {
+             val <- c('0', '0', '0', 'p', 'p', 'p')
+             columnNames <- c('1', '2', '3', '', '', '', '')
+           },
+           {
+             val <- c('0', '0', '0', '0', 'p', 'p', 'p', 'p')
+             columnNames <-
+               c('1', '2', '3', '4', '', '', '', '', '')
+           })
     values = matrix(val,
                     ncol = numOfPicks * 2,
                     nrow = 10,
@@ -410,5 +449,4 @@ server <- function(input, output, session) {
   }
 }
 
-print('done loading app')
 shinyApp(ui = mmUI(), server = server)
