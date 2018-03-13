@@ -18,7 +18,8 @@ updateRadio <-
 setupRadio <-
   function (session,
             inputId,
-            gameColors, shouldEnable) {
+            gameColors,
+            shouldEnable) {
     choiceNames <- list()
     choiceValues <- list()
     for (gameColor in gameColors) {
@@ -28,7 +29,7 @@ setupRadio <-
       # choiceValues <- append(gameColor, choiceValues)
     }
 
-    if (shouldEnable){
+    if (shouldEnable) {
       enable(inputId)
       updateRadioButtons(session,
                          inputId,
@@ -185,8 +186,7 @@ mmUI <- function() {
   # print('ending mmUI')
 }
 updateResults <-
-  function (input,
-            code,
+  function (code,
             numOfPicks,
             guess1,
             guess2,
@@ -236,6 +236,11 @@ updateResults <-
             # print(paste('code[pos2]:',code[pos2]))
           }
         }
+      }
+    }
+    if (length(result) >= resultPos) {
+      for (pos in resultPos:length(result)) {
+        result[pos] <- ''
       }
     }
     result
@@ -341,7 +346,7 @@ server <- function(input, output, session) {
                           nrow = 10,
                           byrow = TRUE)
     currentRowIndex <- 1
-    outputBoard()
+    output$board <- outputBoard()
     gameColors <<- availableColors[1:numOfColors]
     print(paste("  gameColors", gameColors))
 
@@ -358,16 +363,16 @@ server <- function(input, output, session) {
     # if_else(numOfPicks > 2, enable(radioId3), disable(radioId3))
     # if_else(numOfPicks > 3, enable(radioId4), disable(radioId4))
 
-    code <<- sample(gameColors, numOfPicks, replace = length(gameColors) < numOfPicks)
+    code <<-
+      sample(gameColors, numOfPicks, replace = length(gameColors) < numOfPicks)
     print(paste("  code=", code))
     output$mindState <- renderText('mindGame')
   })
 
   observeEvent(input$showResults, {
     # print(paste("localBoard.ncol=", ncol(localBoard)))
-    localBoard[currentRowIndex, ] <<-
+    localBoard[currentRowIndex,] <<-
       updateResults(
-        input,
         code,
         numOfPicks,
         input$radiocell1,
@@ -376,7 +381,7 @@ server <- function(input, output, session) {
         input$radiocell4
       )
     printLocalBoard()
-    outputBoard()
+    output$board <- outputBoard()
     currentRowIndex <<- currentRowIndex + 1
     updateRadio(session, radioId1, label = 'Cell 1', value = 'black')
     updateRadio(session, radioId2, label = 'Cell 2', value = 'black')
@@ -445,7 +450,7 @@ server <- function(input, output, session) {
       return(dat)
     })
     # print(xxx)
-    output$board <- xxx
+    xxx
   }
 }
 
