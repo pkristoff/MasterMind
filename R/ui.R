@@ -1,3 +1,5 @@
+library(shiny)
+library(shinyjs)
 
 # radio buttons for making guess
 radioId1 <- 'radiocell1'

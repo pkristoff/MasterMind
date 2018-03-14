@@ -6,6 +6,7 @@ source('../../R/server.R')
 test_that("updateResults - numOfPicks=1", {
   numOfPicks <- 1
   updateResults <- mmServer('updateResults')
+
   result <- updateResults(c('black'), numOfPicks, 'black', 'red', 'red', 'black')
   expect_equal(result, c('black', '', 'black'))
 
@@ -16,7 +17,8 @@ test_that("updateResults - numOfPicks=1", {
 
 test_that("updateResults - numOfPicks=2", {
   numOfPicks <- 2
-  # print(updateResults)
+  updateResults <- mmServer('updateResults')
+
   result <-
     updateResults(c('black', 'red'),
                   numOfPicks,
@@ -69,6 +71,8 @@ test_that("updateResults - numOfPicks=2", {
 test_that("updateResults - numOfPicks=3",
           {
             numOfPicks <- 3
+            updateResults <- mmServer('updateResults')
+
             result <-
               updateResults(c('black', 'red', 'orange'),
                             numOfPicks,
@@ -176,6 +180,8 @@ test_that("updateResults - numOfPicks=3",
 
 test_that("updateResults - numOfPicks=4", {
   numOfPicks <- 4
+  updateResults <- mmServer('updateResults')
+
   result <-
     updateResults(c('black', 'red', 'orange', 'blue'),
                   numOfPicks,

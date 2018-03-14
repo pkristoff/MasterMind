@@ -6,19 +6,20 @@ library(DT)
 library(dplyr)
 
 mmServer <- function(funct) {
-  hideCode <- function(output) {
-    output$codecell1 <- renderText({
+  hideCode <- function(out) {
+    out$codecell1 <- renderText({
       ''
     })
-    output$codecell2 <- renderText({
+    out$codecell2 <- renderText({
       ''
     })
-    output$codecell3 <- renderText({
+    out$codecell3 <- renderText({
       ''
     })
-    output$codecell4 <- renderText({
+    out$codecell4 <- renderText({
       ''
     })
+    out
   }
   setupRadio <-
     function (session,
@@ -43,25 +44,26 @@ mmServer <- function(funct) {
                            choices = c('do not pick'))
       }
     }
-  showCode <- function (output, code, numOfPicks) {
-    output$codecell1 <- renderText({
+  showCode <- function (out, code, numOfPicks) {
+    out$codecell1 <- renderText({
       paste("<p style='color:", code[1], ";'>O</p>")
     })
     if (numOfPicks > 1) {
-      output$codecell2 <- renderText({
+      out$codecell2 <- renderText({
         paste("<p style='color:", code[2], ";'>O</p>")
       })
     }
     if (numOfPicks > 2) {
-      output$codecell3 <- renderText({
+      out$codecell3 <- renderText({
         paste("<p style='color:", code[3], ";'>O</p>")
       })
     }
     if (numOfPicks > 3) {
-      output$codecell4 <- renderText({
+      out$codecell4 <- renderText({
         paste("<p style='color:", code[4], ";'>O</p>")
       })
     }
+    out
   }
   updateCurrentGuess <- function(input, output, numOfPicks) {
     output$guesscell1 <- renderText({
