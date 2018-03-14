@@ -1,13 +1,12 @@
 
-
-
-
 context("MasterMind - updateResults")
+
+source('../../R/server.R')
 
 test_that("updateResults - numOfPicks=1", {
   numOfPicks <- 1
-  result <-
-    updateResults(c('black'), numOfPicks, 'black', 'red', 'red', 'black')
+  updateResults <- mmServer('updateResults')
+  result <- updateResults(c('black'), numOfPicks, 'black', 'red', 'red', 'black')
   expect_equal(result, c('black', '', 'black'))
 
   result <-
@@ -17,6 +16,7 @@ test_that("updateResults - numOfPicks=1", {
 
 test_that("updateResults - numOfPicks=2", {
   numOfPicks <- 2
+  # print(updateResults)
   result <-
     updateResults(c('black', 'red'),
                   numOfPicks,
@@ -183,7 +183,7 @@ test_that("updateResults - numOfPicks=4", {
                   'purple',
                   'pink',
                   'brown')
-  expect_equal(result, c('white', 'purple', 'pink', 'brown', '', '', '', '',''))
+  expect_equal(result, c('white', 'purple', 'pink', 'brown', '', '', '', '', ''))
 
   result <-
     updateResults(c('black', 'red', 'orange', 'blue'),
@@ -192,7 +192,8 @@ test_that("updateResults - numOfPicks=4", {
                   'black',
                   'black',
                   'black')
-  expect_equal(result, c('black', 'black', 'black', 'black', '', 'black', '', '',''))
+  expect_equal(result,
+               c('black', 'black', 'black', 'black', '', 'black', '', '', ''))
 
   result <-
     updateResults(c('black', 'red', 'orange', 'blue'),
@@ -201,7 +202,8 @@ test_that("updateResults - numOfPicks=4", {
                   'black',
                   'blue',
                   'blue')
-  expect_equal(result, c('black', 'black', 'blue', 'blue', '', 'black', 'black', '',''))
+  expect_equal(result,
+               c('black', 'black', 'blue', 'blue', '', 'black', 'black', '', ''))
 
   result <-
     updateResults(c('black', 'red', 'orange', 'blue'),
@@ -210,7 +212,18 @@ test_that("updateResults - numOfPicks=4", {
                   'black',
                   'blue',
                   'orange')
-  expect_equal(result, c('red', 'black', 'blue', 'orange', '', 'white', 'white', 'white','white'))
+  expect_equal(result,
+               c(
+                 'red',
+                 'black',
+                 'blue',
+                 'orange',
+                 '',
+                 'white',
+                 'white',
+                 'white',
+                 'white'
+               ))
 
   result <-
     updateResults(c('black', 'red', 'brown', 'blue'),
@@ -219,7 +232,18 @@ test_that("updateResults - numOfPicks=4", {
                   'black',
                   'pink',
                   'brown')
-  expect_equal(result, c('red', 'black', 'pink', 'brown', '', 'white', 'white', 'white',''))
+  expect_equal(result,
+               c(
+                 'red',
+                 'black',
+                 'pink',
+                 'brown',
+                 '',
+                 'white',
+                 'white',
+                 'white',
+                 ''
+               ))
 
   result <-
     updateResults(c('black', 'red', 'brown', 'blue'),
@@ -228,5 +252,16 @@ test_that("updateResults - numOfPicks=4", {
                   'red',
                   'brown',
                   'blue')
-  expect_equal(result, c('black', 'red', 'brown', 'blue', '', 'black', 'black', 'black','black'))
+  expect_equal(result,
+               c(
+                 'black',
+                 'red',
+                 'brown',
+                 'blue',
+                 '',
+                 'black',
+                 'black',
+                 'black',
+                 'black'
+               ))
 })
