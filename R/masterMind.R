@@ -15,6 +15,6 @@ if (file.exists('ui.R')) {
   source('R/server.R')
 }
 
-xxx <- mmServer
+xxx <- mmServer('serve')
 
 shinyApp(ui = mmUI(), server = xxx)
