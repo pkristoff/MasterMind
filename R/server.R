@@ -95,12 +95,14 @@ mmServer <- function(funct) {
         ''
       }
     })
+    output
   }
   updateRadio <-
     function (session,
               inputId,
               label = NULL,
               value = NULL) {
+
       message <- list(label = label, value = value)
       session$sendInputMessage(inputId, message)
     }
@@ -310,7 +312,6 @@ mmServer <- function(funct) {
       xxx
     }
   }
-
   if (funct == 'serve'){
     serve
   } else if (funct == 'setupRadio') {
@@ -322,7 +323,10 @@ mmServer <- function(funct) {
   } else if (funct == 'updateCurrentGuess') {
     updateCurrentGuess
   } else if (funct == 'updateRadio') {
+    # print(paste('funct=', funct))
+    # print(showCode)
     updateRadio
+    # showCode
   } else if (funct == 'updateResults') {
     updateResults
   } else {
