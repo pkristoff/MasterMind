@@ -19,6 +19,9 @@ guesscell2 <- 'guesscell2'
 guesscell3 <- 'guesscell3'
 guesscell4 <- 'guesscell4'
 
+canvas_width <- 20
+canvas_height <- 20
+
 jsDrawCircle <- "shinyjs.drawCircle = function(args){var id = args[0]; var code_color = args[1]; console.log(id); var canvas = document.getElementById(id); var ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.arc(10, 10, 5, 0, Math.PI * 2, true); ctx.fillStyle = code_color; ctx.fill(); ctx.closePath(); ctx.stroke();}"
 
 jsClearCircle <- "shinyjs.clearCircle = function(args){var id = args[0]; console.log(id); var canvas = document.getElementById(id); var ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.closePath(); ctx.stroke();}"
@@ -106,24 +109,33 @@ mmUI <- function() {
           column(
             12,
             fixedRow(
-              style = "background-color:pink;",
+              style = "background-color:white;",
               useShinyjs(),
               extendShinyjs(text = jsDrawCircle),
               extendShinyjs(text = jsClearCircle),
               column(3, 'Code'),
               # the actual hidden code
-              column(1, style = "", tags$canvas(id='codeCell1', width=20, height=20)),
-              column(1, style = "", tags$canvas(id='codeCell2', width=20, height=20)),
-              column(1, style = "", tags$canvas(id='codeCell3', width=20, height=20)),
-              column(1, style = "", tags$canvas(id='codeCell4', width=20, height=20))
+              column(1, tags$canvas(id='codeCell1', width=canvas_width, height=canvas_height)),
+              column(1, tags$canvas(id='codeCell2', width=canvas_width, height=canvas_height)),
+              column(1, tags$canvas(id='codeCell3', width=canvas_width, height=canvas_height)),
+              column(1, tags$canvas(id='codeCell4', width=canvas_width, height=canvas_height))
             ),
             fixedRow(
-              style = "background-color:aqua;",
-              column(3, 'Current Guess'),
+              # need this for updating with JS below
+              style = "background-color:white;",
+              # column(3, 'Current Guess'),
               column(1, htmlOutput(guesscell1)),
               column(1, htmlOutput(guesscell2)),
               column(1, htmlOutput(guesscell3)),
               column(1, htmlOutput(guesscell4))
+            ),
+            fixedRow(
+              style = "background-color:white;",
+              column(3, 'Current Guess'),
+              column(1, tags$canvas(id='guesscell1js', width=canvas_width, height=canvas_height)),
+              column(1, tags$canvas(id='guesscell2js', width=canvas_width, height=canvas_height)),
+              column(1, tags$canvas(id='guesscell3js', width=canvas_width, height=canvas_height)),
+              column(1, tags$canvas(id='guesscell4js', width=canvas_width, height=canvas_height))
             ),
             fixedRow(
               column(12, style = "background-color:pink;", dataTableOutput('board'))

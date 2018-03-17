@@ -46,34 +46,44 @@ mmServer <- function(funct) {
   }
   updateCurrentGuess <- function(input, output, numOfPicks) {
     output$guesscell1 <- renderText({
-      # print(paste('numOfPicks',numOfPicks, 'input$radiocell1',input$radiocell1))
+      print(paste('numOfPicks',numOfPicks, 'input$radiocell1',input$radiocell1))
       if (numOfPicks > 0) {
-        paste("<p style='color:", input$radiocell1, ";'>O</p>")
-      } else{
+        js$drawCircle('guesscell1js', input$radiocell1)
         ''
+        # paste("<p style='color:", input$radiocell1, ";'>O</p>")
+      } else{
+        js$clearCircle('guesscell1js', input$radiocell1)
       }
+      ''
     })
     output$guesscell2 <- renderText({
       if (numOfPicks > 1) {
-        paste("<p style='color:", input$radiocell2, ";'>O</p>")
+        js$drawCircle('guesscell2js', input$radiocell2)
+        # paste("<p style='color:", input$radiocell2, ";'>O</p>")
       } else{
         ''
       }
+      ''
     })
     output$guesscell3 <- renderText({
       if (numOfPicks > 2) {
+        js$drawCircle('guesscell3js', input$radiocell3)
         paste("<p style='color:", input$radiocell3, ";'>O</p>")
       } else{
         ''
       }
+      ''
     })
     output$guesscell4 <- renderText({
       if (numOfPicks > 3) {
+        js$drawCircle('guesscell4js', input$radiocell4)
         paste("<p style='color:", input$radiocell4, ";'>O</p>")
       } else{
         ''
       }
+      ''
     })
+
     output
   }
   updateRadio <-
@@ -81,7 +91,6 @@ mmServer <- function(funct) {
               inputId,
               label = NULL,
               value = NULL) {
-
       message <- list(label = label, value = value)
       session$sendInputMessage(inputId, message)
     }
@@ -155,7 +164,7 @@ mmServer <- function(funct) {
     })
     # values <- reactiveValues(mindState = 'preGame')
     availableColors <-
-      c('black', 'blue', 'green', 'orange', 'red', 'purple')
+      c('pink', 'aqua', 'green', 'orange', 'red', 'purple')
     gameColors <- NULL
     code <- NULL
     localBoard <- NULL
