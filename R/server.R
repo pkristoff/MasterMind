@@ -7,18 +7,10 @@ library(dplyr)
 
 mmServer <- function(funct) {
   hideCode <- function(out) {
-    out$codecell1 <- renderText({
-      ''
-    })
-    out$codecell2 <- renderText({
-      ''
-    })
-    out$codecell3 <- renderText({
-      ''
-    })
-    out$codecell4 <- renderText({
-      ''
-    })
+    js$clearCircle('codeCell1')
+    js$clearCircle('codeCell2')
+    js$clearCircle('codeCell3')
+    js$clearCircle('codeCell4')
     out
   }
   setupRadio <-
@@ -26,11 +18,6 @@ mmServer <- function(funct) {
               inputId,
               gameColors,
               shouldEnable) {
-      choiceNames <- list()
-      choiceValues <- list()
-      for (gameColor in gameColors) {
-
-      }
 
       if (shouldEnable) {
         enable(inputId)
@@ -45,23 +32,15 @@ mmServer <- function(funct) {
       }
     }
   showCode <- function (out, code, numOfPicks) {
-    out$codecell1 <- renderText({
-      paste("<p style='color:", code[1], ";'>O</p>")
-    })
+    js$drawCircle('codeCell1', code[1])
     if (numOfPicks > 1) {
-      out$codecell2 <- renderText({
-        paste("<p style='color:", code[2], ";'>O</p>")
-      })
+      js$drawCircle('codeCell2', code[2])
     }
     if (numOfPicks > 2) {
-      out$codecell3 <- renderText({
-        paste("<p style='color:", code[3], ";'>O</p>")
-      })
+      js$drawCircle('codeCell3', code[3])
     }
     if (numOfPicks > 3) {
-      out$codecell4 <- renderText({
-        paste("<p style='color:", code[4], ";'>O</p>")
-      })
+      js$drawCircle('codeCell4', code[4])
     }
     out
   }
@@ -176,7 +155,7 @@ mmServer <- function(funct) {
     })
     # values <- reactiveValues(mindState = 'preGame')
     availableColors <-
-      c('black', 'blue', 'green', 'orange', 'red', 'white')
+      c('black', 'blue', 'green', 'orange', 'red', 'purple')
     gameColors <- NULL
     code <- NULL
     localBoard <- NULL

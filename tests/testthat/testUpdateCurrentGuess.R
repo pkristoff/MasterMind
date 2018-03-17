@@ -1,57 +1,57 @@
 
-context("MasterMind - hideCode")
+context("MasterMind - updateCurrentGuess")
 
 source('../../R/server.R')
 
-test_that("hideCode numOfPicks=1", {
-  showCode <- mmServer('showCode')
-  hideCode <- mmServer('hideCode')
-  out <- list()
-  result <- showCode(out, c('blue'), 1)
-  result <- hideCode(result)
-  expect_equal(result$codecell1(), '')
-  expect_equal(result$codecell2(), '')
-  expect_equal(result$codecell3(), '')
-  expect_equal(result$codecell4(), '')
+test_that("updateCurrentGuess - numOfPicks=1", {
+  numOfPicks <- 1
+  updateCurrentGuess <- mmServer('updateCurrentGuess')
+  output = list()
+  input = list(radiocell1 = 'red')
 
+  result <- updateCurrentGuess(input, output, numOfPicks)
+  expect_equal(result$guesscell1(), "<p style='color: red ;'>O</p>")
+  expect_equal(result$guesscell2(), '')
+  expect_equal(result$guesscell3(), '')
+  expect_equal(result$guesscell4(), '')
 })
 
-test_that("showCode numOfPicks=2", {
-  showCode <- mmServer('showCode')
-  hideCode <- mmServer('hideCode')
-  out <- list()
-  result <- showCode(out, c('red', 'blue'), 2)
-  result <- hideCode(result)
-  expect_equal(result$codecell1(), '')
-  expect_equal(result$codecell2(), '')
-  expect_equal(result$codecell3(), '')
-  expect_equal(result$codecell4(), '')
+test_that("updateCurrentGuess - numOfPicks=2", {
+  numOfPicks <- 2
+  updateCurrentGuess <- mmServer('updateCurrentGuess')
+  output = list()
+  input = list(radiocell1 = 'orange', radiocell2 = 'blue')
 
+  result <- updateCurrentGuess(input, output, numOfPicks)
+  expect_equal(result$guesscell1(), "<p style='color: orange ;'>O</p>")
+  expect_equal(result$guesscell2(), "<p style='color: blue ;'>O</p>")
+  expect_equal(result$guesscell3(), '')
+  expect_equal(result$guesscell4(), '')
 })
 
-test_that("showCode numOfPicks=3", {
-  showCode <- mmServer('showCode')
-  hideCode <- mmServer('hideCode')
-  out <- list()
-  result <- showCode(out, c('red', 'blue', 'orange'), 3)
-  result <- hideCode(result)
-  expect_equal(result$codecell1(), '')
-  expect_equal(result$codecell2(), '')
-  expect_equal(result$codecell3(), '')
-  expect_equal(result$codecell4(), '')
+test_that("updateCurrentGuess - numOfPicks=3", {
+  numOfPicks <- 3
+  updateCurrentGuess <- mmServer('updateCurrentGuess')
+  output = list()
+  input = list(radiocell1 = 'orange', radiocell2 = 'blue', radiocell3 = 'orange')
 
+  result <- updateCurrentGuess(input, output, numOfPicks)
+  expect_equal(result$guesscell1(), "<p style='color: orange ;'>O</p>")
+  expect_equal(result$guesscell2(), "<p style='color: blue ;'>O</p>")
+  expect_equal(result$guesscell3(), "<p style='color: orange ;'>O</p>")
+  expect_equal(result$guesscell4(), '')
 })
 
-test_that("showCode numOfPicks=3", {
-  showCode <- mmServer('showCode')
-  hideCode <- mmServer('hideCode')
-  out <- list()
-  result <- showCode(out, c('red', 'blue', 'orange', 'black'), 4)
-  result <- hideCode(result)
-  expect_equal(result$codecell1(), '')
-  expect_equal(result$codecell2(), '')
-  expect_equal(result$codecell3(), '')
-  expect_equal(result$codecell4(), '')
+test_that("updateCurrentGuess - numOfPicks=4", {
+  numOfPicks <- 4
+  updateCurrentGuess <- mmServer('updateCurrentGuess')
+  output = list()
+  input = list(radiocell1 = 'orange', radiocell2 = 'blue', radiocell3 = 'orange', radiocell4 = 'purple')
 
+  result <- updateCurrentGuess(input, output, numOfPicks)
+  expect_equal(result$guesscell1(), "<p style='color: orange ;'>O</p>")
+  expect_equal(result$guesscell2(), "<p style='color: blue ;'>O</p>")
+  expect_equal(result$guesscell3(), "<p style='color: orange ;'>O</p>")
+  expect_equal(result$guesscell4(), "<p style='color: purple ;'>O</p>")
 })
 
