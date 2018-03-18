@@ -201,6 +201,8 @@ mmServer <- function(funct) {
       setupRadio(session, radioId2, gameColors, numOfPicks > 1)
       setupRadio(session, radioId3, gameColors, numOfPicks > 2)
       setupRadio(session, radioId4, gameColors, numOfPicks > 3)
+      shinyjs::enable("showCode")
+      shinyjs::enable("showResults")
 
       # enable/disable based on number of picks
       # if_else(numOfPicks > 0, enable(radioId1), disable(radioId1))
@@ -234,6 +236,9 @@ mmServer <- function(funct) {
       updateRadio(session, radioId2, label = 'Cell 2', value = 'black')
       updateRadio(session, radioId3, label = 'Cell 3', value = 'black')
       updateRadio(session, radioId4, label = 'Cell 4', value = 'black')
+      showCode(output, code, numOfPicks)
+      shinyjs::disable("showCode")
+      shinyjs::disable("showResults")
     })
     observeEvent(input$showCode, {
       showCode(output, code, numOfPicks)
