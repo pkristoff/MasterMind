@@ -35,9 +35,11 @@ mmServer <- function(funct) {
         if (i <= 6) {
           for (j in i:6) {
             id <- paste0(inputId, j)
-            print(paste0('hiding=', id))
-            shinyjs::hide(selector = paste0("[type=radio][id=", id, "]"))
-            # shinyjs::disable(id = id)
+            sel <- paste0("input[type=radio][name=", inputId, "][value=", j, "]")
+            # print(paste0('hiding=', sel))
+            # Would prefer to use hide here but where this disables the individual radio buttons
+            # hide will hide the whole radio group.
+            shinyjs::disable(selector = sel)
           }
         }
       } else{
