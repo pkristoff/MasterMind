@@ -2,10 +2,10 @@ library(shiny)
 library(shinyjs)
 
 # radio buttons for making guess
-radioId1 <- 'radiocell1'
-radioId2 <- 'radiocell2'
-radioId3 <- 'radiocell3'
-radioId4 <- 'radiocell4'
+radioId1 <- "radiocell1"
+radioId2 <- "radiocell2"
+radioId3 <- "radiocell3"
+radioId4 <- "radiocell4"
 
 # radio buttons for showing the actual winning result
 codecell1 <- 'codecell1'
@@ -35,21 +35,28 @@ mmUI <- function() {
       "<p style='color:orange;font-size:10px;'>Orange</p>"
     htmlBlack <- "<p style='color:black;font-size:10px;'>Black</p>"
     htmlWhite <- "<p style='color:white;font-size:10px;'>White</p>"
-
+    id1 <- paste0(id,1)
+    print(typeof(id1))
+    print(is.vector(id1))
+    id2 <- paste0(id,2)
+    id3 <- paste0(id,3)
+    id4 <- paste0(id,4)
+    id5 <- paste0(id,5)
+    id6 <- paste0(id,6)
     column(
       3,
       radioButtons(
         id,
         label,
         choiceNames = list(
-          HTML(htmlBlack),
-          HTML(htmlWhite),
-          HTML(htmlOrange),
-          HTML(htmlBlue),
-          HTML(htmlGreen),
-          HTML(htmlRed)
+          tags$canvas(id=id1, width=canvas_width, height=canvas_height),
+          tags$canvas(id=id2, width=canvas_width, height=canvas_height),
+          tags$canvas(id=id3, width=canvas_width, height=canvas_height),
+          tags$canvas(id=id4, width=canvas_width, height=canvas_height),
+          tags$canvas(id=id5, width=canvas_width, height=canvas_height),
+          tags$canvas(id=id6, width=canvas_width, height=canvas_height)
         ),
-        choiceValues = list("black", "white", "orange", "blue", "green", "red")
+        choiceValues = c(1:6)
       ),
       textOutput(id)
     )

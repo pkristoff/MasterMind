@@ -18,12 +18,28 @@ mmServer <- function(funct) {
               inputId,
               gameColors,
               shouldEnable) {
-
       if (shouldEnable) {
         enable(inputId)
-        updateRadioButtons(session,
-                           inputId,
-                           choices = gameColors)
+        # updateRadioButtons(session,
+        #                    inputId,
+        #                    choiceNames = choiceNames,
+        #                    choiceValues = gameColors)
+        i <- 1
+        for (col in gameColors) {
+          id <- paste0(inputId, i)
+          shinyjs::enable(id = id)
+          js$drawCircle(id, col)
+          i <- i + 1
+        }
+        print(paste('i=', i))
+        if (i <= 6) {
+          for (j in i:6) {
+            id <- paste0(inputId, j)
+            print(paste0('hiding=', id))
+            shinyjs::hide(selector = paste0("[type=radio][id=", id, "]"))
+            # shinyjs::disable(id = id)
+          }
+        }
       } else{
         disable(inputId)
         updateRadioButtons(session,
@@ -44,48 +60,58 @@ mmServer <- function(funct) {
     }
     out
   }
-  updateCurrentGuess <- function(input, output, numOfPicks) {
-    output$guesscell1 <- renderText({
-      print(paste('numOfPicks',numOfPicks, 'input$radiocell1',input$radiocell1))
-      if (numOfPicks > 0) {
-        js$drawCircle('guesscell1js', input$radiocell1)
+  updateCurrentGuess <-
+    function(input, output, numOfPicks, gameColors) {
+      output$guesscell1 <- renderText({
+        print(
+          paste(
+            'numOfPicks',
+            numOfPicks,
+            'input$radiocell1',
+            input$radiocell1,
+            'gameColors[input$radiocell1]=',
+            gameColors[as.numeric(input$radiocell1)]
+          )
+        )
+        if (numOfPicks > 0) {
+          js$drawCircle('guesscell1js', gameColors[as.numeric(input$radiocell1)])
+          ''
+          # paste("<p style='color:", input$radiocell1, ";'>O</p>")
+        } else{
+          ''
+        }
         ''
-        # paste("<p style='color:", input$radiocell1, ";'>O</p>")
-      } else{
-        js$clearCircle('guesscell1js', input$radiocell1)
-      }
-      ''
-    })
-    output$guesscell2 <- renderText({
-      if (numOfPicks > 1) {
-        js$drawCircle('guesscell2js', input$radiocell2)
-        # paste("<p style='color:", input$radiocell2, ";'>O</p>")
-      } else{
+      })
+      output$guesscell2 <- renderText({
+        if (numOfPicks > 1) {
+          js$drawCircle('guesscell2js', gameColors[as.numeric(input$radiocell2)])
+          # paste("<p style='color:", input$radiocell2, ";'>O</p>")
+        } else{
+          ''
+        }
         ''
-      }
-      ''
-    })
-    output$guesscell3 <- renderText({
-      if (numOfPicks > 2) {
-        js$drawCircle('guesscell3js', input$radiocell3)
-        paste("<p style='color:", input$radiocell3, ";'>O</p>")
-      } else{
+      })
+      output$guesscell3 <- renderText({
+        if (numOfPicks > 2) {
+          js$drawCircle('guesscell3js', gameColors[as.numeric(input$radiocell3)])
+          paste("<p style='color:", input$radiocell3, ";'>O</p>")
+        } else{
+          ''
+        }
         ''
-      }
-      ''
-    })
-    output$guesscell4 <- renderText({
-      if (numOfPicks > 3) {
-        js$drawCircle('guesscell4js', input$radiocell4)
-        paste("<p style='color:", input$radiocell4, ";'>O</p>")
-      } else{
+      })
+      output$guesscell4 <- renderText({
+        if (numOfPicks > 3) {
+          js$drawCircle('guesscell4js', gameColors[as.numeric(input$radiocell4)])
+          paste("<p style='color:", input$radiocell4, ";'>O</p>")
+        } else{
+          ''
+        }
         ''
-      }
-      ''
-    })
+      })
 
-    output
-  }
+      output
+    }
   updateRadio <-
     function (session,
               inputId,
@@ -97,6 +123,7 @@ mmServer <- function(funct) {
   updateResults <-
     function (code,
               numOfPicks,
+              gameColors,
               guess1,
               guess2,
               guess3,
@@ -106,18 +133,23 @@ mmServer <- function(funct) {
                    guess2,
                    guess3,
                    guess4)
-      result <- guesses[1:numOfPicks]
+
+      myGuess <- c()
+      for (i in 1:numOfPicks) {
+        myGuess[i] <- gameColors[as.numeric(guesses[i])]
+      }
+      # myGuess <- guesses[1:numOfPicks]
+
+      result <- myGuess[1:numOfPicks]
       result <- append(result, '')
       result <- c(result, c('')[1:numOfPicks])
 
-      myGuess <- guesses[1:numOfPicks]
-
-      # print(paste('code:', code))
-      # print(paste('myGuess:', myGuess))
+      print(paste('code:', code))
+      print(paste('myGuess:', myGuess))
       posFound <- c()
       posNotFound <- c()
       for (pos in 1:numOfPicks) {
-        # print(paste('pos=', pos, 'nextPos', nextPos))
+        print(paste('pos=', pos, 'resultPos', resultPos))
         if (myGuess[pos] == code[pos]) {
           posFound <- append(posFound, pos)
           result[resultPos] <- 'black'
@@ -195,7 +227,7 @@ mmServer <- function(funct) {
       gameColors <<- availableColors[1:numOfColors]
       print(paste("  gameColors", gameColors))
 
-      updateCurrentGuess(input, output, numOfPicks)
+      updateCurrentGuess(input, output, numOfPicks, gameColors)
       # set radio buttons based on number of colors
       setupRadio(session, radioId1, gameColors, numOfPicks > 0)
       setupRadio(session, radioId2, gameColors, numOfPicks > 1)
@@ -203,12 +235,6 @@ mmServer <- function(funct) {
       setupRadio(session, radioId4, gameColors, numOfPicks > 3)
       shinyjs::enable("showCode")
       shinyjs::enable("showResults")
-
-      # enable/disable based on number of picks
-      # if_else(numOfPicks > 0, enable(radioId1), disable(radioId1))
-      # if_else(numOfPicks > 1, enable(radioId2), disable(radioId2))
-      # if_else(numOfPicks > 2, enable(radioId3), disable(radioId3))
-      # if_else(numOfPicks > 3, enable(radioId4), disable(radioId4))
 
       code <<-
         sample(gameColors,
@@ -220,15 +246,17 @@ mmServer <- function(funct) {
 
     observeEvent(input$showResults, {
       # print(paste("localBoard.ncol=", ncol(localBoard)))
-      localBoard[currentRowIndex,] <<-
+      rowResult <-
         updateResults(
           code,
           numOfPicks,
+          gameColors,
           input$radiocell1,
           input$radiocell2,
           input$radiocell3,
           input$radiocell4
         )
+      localBoard[currentRowIndex, ] <<- rowResult
       printLocalBoard()
       output$board <- outputBoard()
       currentRowIndex <<- currentRowIndex + 1
@@ -236,9 +264,11 @@ mmServer <- function(funct) {
       updateRadio(session, radioId2, label = 'Cell 2', value = 'black')
       updateRadio(session, radioId3, label = 'Cell 3', value = 'black')
       updateRadio(session, radioId4, label = 'Cell 4', value = 'black')
-      showCode(output, code, numOfPicks)
-      shinyjs::disable("showCode")
-      shinyjs::disable("showResults")
+      if (rowResult[length(rowResult)] == 'black') {
+        showCode(output, code, numOfPicks)
+        shinyjs::disable("showCode")
+        shinyjs::disable("showResults")
+      }
     })
     observeEvent(input$showCode, {
       showCode(output, code, numOfPicks)
@@ -305,7 +335,7 @@ mmServer <- function(funct) {
       xxx
     }
   }
-  if (funct == 'serve'){
+  if (funct == 'serve') {
     serve
   } else if (funct == 'setupRadio') {
     setupRadio
