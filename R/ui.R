@@ -22,9 +22,11 @@ guesscell4 <- 'guesscell4'
 canvas_width <- 20
 canvas_height <- 20
 
-jsDrawCircle <- "shinyjs.drawCircle = function(args){var id = args[0]; var code_color = args[1]; console.log(id); var canvas = document.getElementById(id); var ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.arc(10, 10, 5, 0, Math.PI * 2, true); ctx.fillStyle = code_color; ctx.fill(); ctx.closePath(); ctx.stroke();}"
+jsDrawCircle <-
+  "shinyjs.drawCircle = function(args){var id = args[0]; var code_color = args[1]; console.log(id); var canvas = document.getElementById(id); console.log(canvas); var ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.arc(10, 10, 5, 0, Math.PI * 2, true); ctx.fillStyle = code_color; ctx.fill(); ctx.closePath(); ctx.stroke();}"
 
-jsClearCircle <- "shinyjs.clearCircle = function(args){var id = args[0]; console.log(id); var canvas = document.getElementById(id); var ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.closePath(); ctx.stroke();}"
+jsClearCircle <-
+  "shinyjs.clearCircle = function(args){var id = args[0]; console.log(id); var canvas = document.getElementById(id); var ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.closePath(); ctx.stroke();}"
 
 mmUI <- function() {
   generateRadioButton <- function(id, label) {
@@ -35,31 +37,53 @@ mmUI <- function() {
       "<p style='color:orange;font-size:10px;'>Orange</p>"
     htmlBlack <- "<p style='color:black;font-size:10px;'>Black</p>"
     htmlWhite <- "<p style='color:white;font-size:10px;'>White</p>"
-    id1 <- paste0(id,1)
-    print(typeof(id1))
-    print(is.vector(id1))
-    id2 <- paste0(id,2)
-    id3 <- paste0(id,3)
-    id4 <- paste0(id,4)
-    id5 <- paste0(id,5)
-    id6 <- paste0(id,6)
-    column(
-      3,
-      radioButtons(
-        id,
-        label,
-        choiceNames = list(
-          tags$canvas(id=id1, width=canvas_width, height=canvas_height),
-          tags$canvas(id=id2, width=canvas_width, height=canvas_height),
-          tags$canvas(id=id3, width=canvas_width, height=canvas_height),
-          tags$canvas(id=id4, width=canvas_width, height=canvas_height),
-          tags$canvas(id=id5, width=canvas_width, height=canvas_height),
-          tags$canvas(id=id6, width=canvas_width, height=canvas_height)
-        ),
-        choiceValues = c(1:6)
-      ),
-      textOutput(id)
-    )
+    id1 <- paste0(id, 1)
+    # print(typeof(id1))
+    # print(is.vector(id1))
+    id2 <- paste0(id, 2)
+    id3 <- paste0(id, 3)
+    id4 <- paste0(id, 4)
+    id5 <- paste0(id, 5)
+    id6 <- paste0(id, 6)
+    column(3,
+           radioButtons(
+             id,
+             label,
+             choiceNames = list(
+               tags$canvas(
+                 id = id1,
+                 width = canvas_width,
+                 height = canvas_height
+               ),
+               tags$canvas(
+                 id = id2,
+                 width = canvas_width,
+                 height = canvas_height
+               ),
+               tags$canvas(
+                 id = id3,
+                 width = canvas_width,
+                 height = canvas_height
+               ),
+               tags$canvas(
+                 id = id4,
+                 width = canvas_width,
+                 height = canvas_height
+               ),
+               tags$canvas(
+                 id = id5,
+                 width = canvas_width,
+                 height = canvas_height
+               ),
+               tags$canvas(
+                 id = id6,
+                 width = canvas_width,
+                 height = canvas_height
+               )
+             ),
+             choiceValues = c(1:6)
+           ),
+           textOutput(id))
   }
 
   fluidPage(
@@ -122,10 +146,38 @@ mmUI <- function() {
               extendShinyjs(text = jsClearCircle),
               column(3, 'Code'),
               # the actual hidden code
-              column(1, tags$canvas(id='codeCell1', width=canvas_width, height=canvas_height)),
-              column(1, tags$canvas(id='codeCell2', width=canvas_width, height=canvas_height)),
-              column(1, tags$canvas(id='codeCell3', width=canvas_width, height=canvas_height)),
-              column(1, tags$canvas(id='codeCell4', width=canvas_width, height=canvas_height))
+              column(
+                1,
+                tags$canvas(
+                  id = 'codeCell1',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              ),
+              column(
+                1,
+                tags$canvas(
+                  id = 'codeCell2',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              ),
+              column(
+                1,
+                tags$canvas(
+                  id = 'codeCell3',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              ),
+              column(
+                1,
+                tags$canvas(
+                  id = 'codeCell4',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              )
             ),
             fixedRow(
               # need this for updating with JS below
@@ -139,13 +191,50 @@ mmUI <- function() {
             fixedRow(
               style = "background-color:white;",
               column(3, 'Current Guess'),
-              column(1, tags$canvas(id='guesscell1js', width=canvas_width, height=canvas_height)),
-              column(1, tags$canvas(id='guesscell2js', width=canvas_width, height=canvas_height)),
-              column(1, tags$canvas(id='guesscell3js', width=canvas_width, height=canvas_height)),
-              column(1, tags$canvas(id='guesscell4js', width=canvas_width, height=canvas_height))
+              column(
+                1,
+                tags$canvas(
+                  id = 'guesscell1js',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              ),
+              column(
+                1,
+                tags$canvas(
+                  id = 'guesscell2js',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              ),
+              column(
+                1,
+                tags$canvas(
+                  id = 'guesscell3js',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              ),
+              column(
+                1,
+                tags$canvas(
+                  id = 'guesscell4js',
+                  width = canvas_width,
+                  height = canvas_height
+                )
+              )
             ),
+
+
+            fixedRow(column(
+              12,
+              useShinyjs(),
+              style = "background-color:lightgray;",
+              uiOutput('resultTable')
+            )),
+
             fixedRow(
-              column(12, style = "background-color:pink;", dataTableOutput('board'))
+              column(1, textInput('hiddenInput', 'hideLable', ''))
             ),
             # buttons
             fixedRow(column(

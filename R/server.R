@@ -13,6 +13,25 @@ mmServer <- function(funct) {
     js$clearCircle('codeCell4')
     out
   }
+
+  generateResultTable <- function(numOfPicks, body){
+    headers <- c()
+    for (i in 1:numOfPicks){
+      headers[[i]] <- tags$th(as.character(i))
+    }
+    tags$table(class = "table",
+               tags$thead(
+                 tags$tr(
+                   tags$th("Guess", 'colspan' = numOfPicks, 'style' = 'text-align: center'),
+                   tags$th("Result", 'colspan' = 4, 'style' = 'text-align: center')
+                 ),
+                 tags$tr(headers)
+               ),
+               tags$tbody(
+                 body
+               )
+    )
+  }
   setupRadio <-
     function (session,
               inputId,
@@ -20,10 +39,6 @@ mmServer <- function(funct) {
               shouldEnable) {
       if (shouldEnable) {
         enable(inputId)
-        # updateRadioButtons(session,
-        #                    inputId,
-        #                    choiceNames = choiceNames,
-        #                    choiceValues = gameColors)
         i <- 1
         for (col in gameColors) {
           id <- paste0(inputId, i)
@@ -31,12 +46,10 @@ mmServer <- function(funct) {
           js$drawCircle(id, col)
           i <- i + 1
         }
-        print(paste('i=', i))
         if (i <= 6) {
           for (j in i:6) {
             id <- paste0(inputId, j)
             sel <- paste0("input[type=radio][name=", inputId, "][value=", j, "]")
-            # print(paste0('hiding=', sel))
             # Would prefer to use hide here but where this disables the individual radio buttons
             # hide will hide the whole radio group.
             shinyjs::disable(selector = sel)
@@ -44,9 +57,6 @@ mmServer <- function(funct) {
         }
       } else{
         disable(inputId)
-        updateRadioButtons(session,
-                           inputId,
-                           choices = c('do not pick'))
       }
     }
   showCode <- function (out, code, numOfPicks) {
@@ -78,7 +88,6 @@ mmServer <- function(funct) {
         if (numOfPicks > 0) {
           js$drawCircle('guesscell1js', gameColors[as.numeric(input$radiocell1)])
           ''
-          # paste("<p style='color:", input$radiocell1, ";'>O</p>")
         } else{
           ''
         }
@@ -87,7 +96,6 @@ mmServer <- function(funct) {
       output$guesscell2 <- renderText({
         if (numOfPicks > 1) {
           js$drawCircle('guesscell2js', gameColors[as.numeric(input$radiocell2)])
-          # paste("<p style='color:", input$radiocell2, ";'>O</p>")
         } else{
           ''
         }
@@ -114,7 +122,7 @@ mmServer <- function(funct) {
 
       output
     }
-  updateRadio <-
+  updateClient <-
     function (session,
               inputId,
               label = NULL,
@@ -140,7 +148,6 @@ mmServer <- function(funct) {
       for (i in 1:numOfPicks) {
         myGuess[i] <- gameColors[as.numeric(guesses[i])]
       }
-      # myGuess <- guesses[1:numOfPicks]
 
       result <- myGuess[1:numOfPicks]
       result <- append(result, '')
@@ -151,7 +158,6 @@ mmServer <- function(funct) {
       posFound <- c()
       posNotFound <- c()
       for (pos in 1:numOfPicks) {
-        print(paste('pos=', pos, 'resultPos', resultPos))
         if (myGuess[pos] == code[pos]) {
           posFound <- append(posFound, pos)
           result[resultPos] <- 'black'
@@ -160,23 +166,14 @@ mmServer <- function(funct) {
           posNotFound <- append(posNotFound, pos)
         }
       }
-      # print(paste('posFound:', posFound))
-      # print(paste('posNotFound:', posNotFound))
       for (posNF in posNotFound) {
         color = myGuess[posNF]
-        # print(paste('looking for color:',color))
         for (pos2 in 1:numOfPicks) {
           if (match(pos2, posFound, nomatch = 0) == 0) {
-            # print(paste('code:',code))
-            # print(paste('pos2:',pos2,'code[pos2]:',code[pos2]))
-            # print(paste('pos2:', pos2, 'code[pos2]:', code[pos2], 'color:', color))
             if (color == code[pos2]) {
-              # print(paste('found color:',color))
               posFound <- append(posFound, pos2)
               result[resultPos] <- 'white'
               resultPos <- resultPos + 1
-            } else{
-              # print(paste('code[pos2]:',code[pos2]))
             }
           }
         }
@@ -186,23 +183,43 @@ mmServer <- function(funct) {
           result[pos] <- ''
         }
       }
+      print(paste('result=', result))
       result
     }
+  generateRowTags <- function(numOfPicks, currentRowIndex) {
+
+    rows <- list()
+    for (j in 1:currentRowIndex) {
+      row <- list()
+      for (i in 1:((numOfPicks * 2) + 1)) {
+        id <- paste0('pick', j, i)
+        cell <- tags$td(tags$canvas(id=id, width=20, height=20))
+        row[[i]] <- cell
+      }
+      rows[[j]] <- tags$tr(row)
+    }
+    tags$tbody(rows)
+  }
 
   serve <- function(input, output, session) {
     print('starting server')
+
+    # global variables
+
     numOfColors <- 0
     numOfPicks <- 0
-    output$mindState <- reactive({
-      'preGame'
-    })
-    # values <- reactiveValues(mindState = 'preGame')
-    availableColors <-
-      c('pink', 'aqua', 'green', 'orange', 'red', 'purple')
     gameColors <- NULL
     code <- NULL
     localBoard <- NULL
     currentRowIndex <- 1
+    rowResults <- list()
+    availableColors <-
+      c('pink', 'aqua', 'green', 'orange', 'red', 'purple')
+
+    # show pre-game tab first.
+    output$mindState <- reactive({
+      'preGame'
+    })
 
     # buttons
     observeEvent(input$startNewGame, {
@@ -220,12 +237,12 @@ mmServer <- function(funct) {
       numOfPicks <<- as.numeric(input$numOfPicks)
       print(paste("  numOfPicks", input$numOfPicks))
       print(paste("  numOfColors", input$numOfColors))
-      localBoard <<- matrix('',
-                            ncol = numOfPicks * 2 + 1,
-                            nrow = 10,
-                            byrow = TRUE)
-      currentRowIndex <- 1
-      output$board <- outputBoard()
+
+      output$resultTable <- renderUI(
+        generateResultTable(numOfPicks, list())
+      )
+      rowResults <<- list()
+      currentRowIndex <<- 1
       gameColors <<- availableColors[1:numOfColors]
       print(paste("  gameColors", gameColors))
 
@@ -246,8 +263,11 @@ mmServer <- function(funct) {
       output$mindState <- renderText('mindGame')
     })
 
+    observeEvent(input$showCode, {
+      showCode(output, code, numOfPicks)
+    })
+
     observeEvent(input$showResults, {
-      # print(paste("localBoard.ncol=", ncol(localBoard)))
       rowResult <-
         updateResults(
           code,
@@ -258,85 +278,44 @@ mmServer <- function(funct) {
           input$radiocell3,
           input$radiocell4
         )
-      localBoard[currentRowIndex, ] <<- rowResult
-      printLocalBoard()
-      output$board <- outputBoard()
-      currentRowIndex <<- currentRowIndex + 1
-      updateRadio(session, radioId1, label = 'Cell 1', value = 'black')
-      updateRadio(session, radioId2, label = 'Cell 2', value = 'black')
-      updateRadio(session, radioId3, label = 'Cell 3', value = 'black')
-      updateRadio(session, radioId4, label = 'Cell 4', value = 'black')
+
+      output$resultTable <- renderUI(
+        generateResultTable(numOfPicks, generateRowTags(numOfPicks, currentRowIndex))
+      )
+
+      rowResults[[currentRowIndex]] <<- rowResult
       if (rowResult[length(rowResult)] == 'black') {
         showCode(output, code, numOfPicks)
         shinyjs::disable("showCode")
         shinyjs::disable("showResults")
       }
+      currentRowIndex <<- currentRowIndex + 1
+      # The problem was finding a time to draw the pegs.  The board is not drawn yet.
+      # So set a value on the client which causes a shiny event to happen.
+      # By the time we catch it, the board is updated.
+      updateClient(session, 'hiddenInput', label = 'hideLable', value = as.character(currentRowIndex))
     })
-    observeEvent(input$showCode, {
-      showCode(output, code, numOfPicks)
-    })
-    printLocalBoard <- function() {
-      # print(localBoard[currentRowIndex, ])
-    }
-    outputBoard <- function() {
-      switch(numOfPicks,
-             {
-               val <- c('0', 'p')
-               columnNames <- c('1', '')
-             },
-             {
-               val <- c('0', '0', 'p', 'p')
-               columnNames <- c('1', '2', '', '', '')
-             },
-             {
-               val <- c('0', '0', '0', 'p', 'p', 'p')
-               columnNames <- c('1', '2', '3', '', '', '', '')
-             },
-             {
-               val <- c('0', '0', '0', '0', 'p', 'p', 'p', 'p')
-               columnNames <-
-                 c('1', '2', '3', '4', '', '', '', '', '')
-             })
-      values = matrix(val,
-                      ncol = numOfPicks * 2,
-                      nrow = 10,
-                      byrow = TRUE)
 
-      xxx <- renderDataTable({
-        dat <-
-          datatable(
-            localBoard,
-            colnames = columnNames,
-            container = withTags(table(class = 'display',
-                                       thead(
-                                         tr(
-                                           th(colspan = numOfPicks, style = "text-align:center", 'Guess'),
-                                           th(colspan = 1, style = "text-align:center", ''),
-                                           th(colspan = numOfPicks, style = "text-align:center", 'Result')
-                                         ),
-                                         tr(lapply(columnNames, th))
-                                       ))),
-            options = list(
-              paging = FALSE,
-              searching = FALSE,
-              ordering = FALSE,
-              dom = 't'
-            )
-          ) %>%
-          formatStyle(
-            columns = 1:numOfPicks,
-            valueColumns = 1:numOfPicks,
-            color = styleEqual(
-              levels = c('black', 'blue', 'green', 'orange', 'red', 'white'),
-              values = c('black', 'blue', 'green', 'orange', 'red', 'white')
-            )
-          )
-        return(dat)
-      })
-      # print(xxx)
-      xxx
-    }
+    # draw pegs after result table has been displayed
+    observeEvent(input$hiddenInput, {
+      if (length(rowResults) > 0) {
+        for (j in 1:length(rowResults)) {
+          rr <- rowResults[[j]]
+          for (i in 1:length(rr)) {
+            id <- paste0('pick', j, i)
+            cellColor <- rr[i]
+            if (cellColor != '') {
+              js$drawCircle(id, cellColor)
+            } else {
+              js$clearCircle(id)
+            }
+          }
+        }
+      }
+    })
   }
+
+  # make some functions available for testing.
   if (funct == 'serve') {
     serve
   } else if (funct == 'setupRadio') {
@@ -347,10 +326,10 @@ mmServer <- function(funct) {
     showCode
   } else if (funct == 'updateCurrentGuess') {
     updateCurrentGuess
-  } else if (funct == 'updateRadio') {
+  } else if (funct == 'updateClient') {
     # print(paste('funct=', funct))
     # print(showCode)
-    updateRadio
+    updateClient
     # showCode
   } else if (funct == 'updateResults') {
     updateResults
