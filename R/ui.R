@@ -234,7 +234,7 @@ mmUI <- function() {
             )),
 
             fixedRow(
-              column(1, textInput('hiddenInput', 'hideLable', ''))
+              column(1, shinyjs::hidden(textInput('hiddenInput', 'hideLable', '')))
             ),
             # buttons
             fixedRow(column(
